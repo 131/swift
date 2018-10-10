@@ -18,7 +18,7 @@ const log = {
   error : debug('swift:error'),
 };
 
-
+const Storage = require('./storage');
 
 class Context  {
 
@@ -28,7 +28,7 @@ class Context  {
       ...credentials
     };
 
-    let secret = async function(Storage, container) {
+    let secret = async function(container) {
       let bundled = get(config, `containers.${container}.temp-url-key`);
       if(bundled)
         return bundled;
@@ -47,18 +47,20 @@ class Context  {
         throw `Cannot lookup endpoint for container '${container}'`;
       if(!filename)
         throw `Cannot work on non filename in container mode`;
-      return  `${dst}/${filename}`;
+      return  url.parse(`${dst}/${filename}`);
     };
 
 
-    let query = (xtra, container, filename) => {
-      var target = {...url.parse(endpoint(container, filename)), ...xtra};
+    let query = async function(xtra, container, filename) {
+      let tmpurl = await Storage.tempURL(this, container, filename, xtra && xtra.method);
+      var target = {...url.parse(tmpurl), ...xtra};
       target.headers  = {...headers, ...target.headers};
+
       log.debug("Query", target);
       return target;
     };
 
-    return {_query : query, _secret : secret};
+    return {_query : query, _secret : secret, _endpoint : endpoint};
   }
 
 
@@ -90,8 +92,12 @@ class Context  {
       json : true,
     };
 
-    var res = await request(query, json);
-    var payload = JSON.parse(await drain(res));
+    try {
+      var res = await request(query, json);
+      var payload = JSON.parse(await drain(res));
+    } catch(err) {
+      throw `Invalid swift credentials`;
+    }
 
 
     var token           = get(payload, 'access.token');
@@ -111,7 +117,7 @@ class Context  {
       var dst = endpoints[what] + "/" + container;
       if(filename)
         dst += "/" + filename;
-      return dst;
+      return url.parse(dst);
     };
 
     var headers  = {
@@ -120,7 +126,7 @@ class Context  {
     };
 
     query = (xtra, container, filename) => {
-      var target = {...url.parse(endpoint(container, filename)), ...xtra};
+      var target = {...endpoint(container, filename), ...xtra};
       target.headers  = {...headers, ...target.headers};
       log.debug("Query", target);
       return target;
@@ -128,7 +134,7 @@ class Context  {
 
     let containerCache = {};
 
-    let secret = async function(Storage, container) {
+    let secret = async function(container) {
       if(!containerCache[container])
         containerCache[container] = await Storage.showContainer(this, container);
 
@@ -140,7 +146,7 @@ class Context  {
       return secret;
     };
 
-    return {_query : query, _secret : secret};
+    return {_query : query, _secret : secret, _endpoint : endpoint};
   }
 
 }

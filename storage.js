@@ -33,7 +33,7 @@ class Storage {
 
 
   static async createContainer(ctx, container) {
-    var query = ctx._query({
+    var query = await ctx._query({
       method :   'PUT',
     }, container);
 
@@ -44,7 +44,7 @@ class Storage {
 
 
   static async download(ctx, container, filename, xtra) {
-    var query = ctx._query(xtra, container, filename);
+    var query = await ctx._query(xtra, container, filename);
     var res = await request(query);
     return res;
   }
@@ -62,9 +62,9 @@ class Storage {
     if(!duration)
       duration = 86400;
 
-    let secret = await ctx._secret(Storage, container);
+    let secret = await ctx._secret(container);
 
-    let dst = ctx._query({}, container, filename);
+    let dst = ctx._endpoint(container, filename);
     let expires = Math.floor(Date.now() / 1000 + duration);
 
     let hmac_body = [method || 'GET', expires, decodeURIComponent(dst.path)].join("\n");
@@ -81,7 +81,7 @@ class Storage {
       headers = { etag : headers };
 
     log.info("putStream to", filename, headers);
-    var query = ctx._query({
+    var query = await ctx._query({
       method :   'PUT',
       headers,
     }, container, filename);
@@ -92,7 +92,7 @@ class Storage {
 
 
   static async deleteFile(ctx, container, filename) {
-    var query = ctx._query({
+    var query = await ctx._query({
       method :   'DELETE',
     }, container, filename);
     var res = await request(query);
@@ -101,7 +101,7 @@ class Storage {
   }
 
   static async updateContainer(ctx, container, headers) {
-    var query = ctx._query({method : 'POST', headers}, container);
+    var query = await ctx._query({method : 'POST', headers}, container);
 
     var res = await request(query);
     await drain(res); //make sure to close
@@ -119,7 +119,7 @@ class Storage {
 
 
   static async getFileList(ctx, container) {
-    var query = ctx._query({}, container);
+    var query = await ctx._query({}, container);
     var res  = await request(query);
     var body = JSON.parse(await drain(res));
     return body;
@@ -128,7 +128,7 @@ class Storage {
 
 
   static async showContainer(ctx, container) {
-    var query = ctx._query({
+    var query = await ctx._query({
       method :   'HEAD',
     }, container);
 
