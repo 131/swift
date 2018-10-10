@@ -15,9 +15,61 @@ $ npm install swift
 ```
 
 
-# API/services
+# API/services (auth3)
+Auth3 API will login to your openstack and use a X-Auth-Token in all operations.
+Make sure to renew (setInterval) the auth token periodicaly.
 
-## object-store
+
+## object-store 
+```js
+"use strict";
+
+const fs      = require('fs');
+const Context = require('swift/context');
+const storage = require('swift/storage');
+
+const pipe    = require('nyks/stream/pipe');
+const creds   = require('./credentials');
+
+
+
+class foo {
+  async run(){
+    // init token
+
+    let container = 'mediaprivate';
+
+    var ctx = await Context.build(creds);
+
+    var files = await storage.toggleMode(ctx, container, ".r:*,.rlistings");
+    var headers = await storage.showContainer(ctx, container);
+
+
+    var remote = await storage.putFile(ctx, 'boucs.jpg', container, 'bouc.jpg');
+    var local = fs.createWriteStream('tmp.jpg');
+
+    var remote = storage.download(ctx, container, 'bouc.jpg');
+
+    await pipe(remote, local);
+
+    var remote = await storage.deleteFile(ctx, container, 'bouc.jpg');
+
+    var files = await storage.getFileList(ctx, container);
+    console.log({files, remote});
+  }
+}
+
+
+module.exports = foo;
+```
+
+
+# API/services (meta-temp-url-key)
+Using a container meta-temp key, you can upload, retrieve or delete specific files in your container.
+On a CAS designed container, this should be considered as a best practice against a full container access.
+
+
+## object-store 
 ```js
 "use strict";
 
@@ -26,28 +78,43 @@ const Context = require('swift/context');
 const storage = require('swift/services/object-store');
 
 const pipe    = require('nyks/stream/pipe');
-const creds   = require('./credentials');
+const creds   = {
+ "containers" : {
+
+    "mediaprivate" : {
+        "endpoint"     : "https://someopenstackswifthost/v1/AUTH_PROJECTID/mediaprivate",
+        "temp-url-key" : "somesecret",
+    }
+ }
+
+};
 
 
 class foo {
   async run(){
-    // init token
+
+    let container = 'mediaprivate';
+
+
+    // does not init token, as no username is provided
     var ctx = await Context.build(creds);
 
-    var files = await storage.toggleMode(ctx, 'mediaprivate', ".r:*,.rlistings");
-    var headers = await storage.showContainer(ctx, 'mediaprivate');
+    //please note that container level API won't work
+    //var files = await storage.toggleMode(ctx, container, ".r:*,.rlistings");
+    //var headers = await storage.showContainer(ctx, container);
 
 
-    var remote = await storage.putFile(ctx, 'boucs.jpg', 'mediaprivate/bouc.jpg');
+    var remote = await storage.putFile(ctx, 'boucs.jpg', container, 'bouc.jpg');
     var local = fs.createWriteStream('tmp.jpg');
 
-    var remote = storage.download(ctx, 'mediaprivate/bouc.jpg');
+      //download through tempURL
+    var remote = storage.download(ctx, container, 'bouc.jpg');
 
     await pipe(remote, local);
 
-    var remote = await storage.deleteFile(ctx, 'mediaprivate/bouc.jpg');
+    var remote = await storage.deleteFile(ctx, container, 'bouc.jpg');
 
-    var files = await storage.getFileList(ctx, 'mediaprivate');
+    var files = await storage.getFileList(ctx, container);
     console.log({files, remote});
   }
 }
@@ -55,5 +122,10 @@ class foo {
 
 module.exports = foo;
 ```
+
+
+
+
+
 
 

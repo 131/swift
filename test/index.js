@@ -9,8 +9,8 @@ const drain = require('nyks/stream/drain');
 const fetch = require('nyks/http/fetch');
 const bl    = require('bl');
 
-const OVHContext = require('../context');
-const OVHStorage = require('../services/object-store');
+const Context = require('../context');
+const Storage = require('../storage');
 const guid       = require('mout/random/guid');
 
 
@@ -32,15 +32,15 @@ describe("initial test suite", function() {
     else
       creds = require('./credentials.json');
 
-    ctx = await OVHContext.build(creds);
+    ctx = await Context.build(creds);
     console.log("Context is ready");
   });
 
 
   it("should create a dedicated container", async () => {
-    var res = await OVHStorage.createContainer(ctx, container);
+    var res = await Storage.createContainer(ctx, container);
     expect(res).to.be.ok();
-    await OVHStorage.tempKey(ctx, container, secret);
+    await Storage.tempKey(ctx, container, secret);
   });
 
 
@@ -52,14 +52,14 @@ describe("initial test suite", function() {
     var tmp = bl(body);
     var headers = {etag : hash};
 
-    var res = await OVHStorage.putStream(ctx, tmp, path.join(container, "/pi ng"), headers);
+    var res = await Storage.putStream(ctx, tmp, container, "pi ng", headers);
     expect(res.etag).to.eql(hash);
   });
 
 
 
   it("should generate a tempurl for this file", async() => {
-    var tempurl = await OVHStorage.tempURL(ctx, container, "pi ng");
+    var tempurl = await Storage.tempURL(ctx, container, "pi ng");
     expect(tempurl).to.be.ok();
 
     //now fetch temp url (!)
@@ -70,7 +70,7 @@ describe("initial test suite", function() {
 
 
   it("Should delete a dummy file", async () => {
-    var res = await OVHStorage.deleteFile(ctx, path.join(container, "/pi ng"));
+    var res = await Storage.deleteFile(ctx, container, "pi ng");
     expect(res).to.be.ok();
   });
 
@@ -79,7 +79,7 @@ describe("initial test suite", function() {
     var hash = md5(body);
     var tmp = bl(body);
     try {
-      var res = await OVHStorage.putStream(ctx, tmp, path.join(container, "/pi ng"), 'nope');
+      var res = await Storage.putStream(ctx, tmp, container, "pi ng", 'nope');
       expect().to.fail("Never here");
     } catch(err) {
       expect(err.res.statusCode).to.be(422); //Unprocessable Entity

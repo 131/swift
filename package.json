@@ -15,10 +15,11 @@
   "main": "./index.js",
   "scripts": {
     "preversion": "npm run checkall",
-    "eslint": "eslint index.js context.js services",
+    "eslint": "eslint index.js context.js storage.js",
     "checkall": "npm run eslint",
     "mocha": "node node_modules/mocha/bin/_mocha -b",
-    "test": "node node_modules/istanbul/lib/cli.js cover --report text-summary --report html --report lcov  node_modules/mocha/bin/_mocha --",
+    "test" : "npm run eslint && npm run cover",
+    "cover": "node node_modules/istanbul/lib/cli.js cover --report text-summary --report html --report lcov  node_modules/mocha/bin/_mocha --",
     "coveralls": "npm install coveralls && node ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info"
   },
   "repository": {

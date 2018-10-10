@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const fs   = require('fs');
 const url  = require('url');
 
@@ -12,10 +11,11 @@ const hmac = require('nyks/crypto/hmac');
 const encode = require('querystring').encode;
 const debug  = require('debug');
 
+
 const log = {
-  debug : debug('swift:object-store:debug'),
-  info  : debug('swift:object-store:info'),
-  error : debug('swift:object-store:error'),
+  debug : debug('swift:debug'),
+  info  : debug('swift:info'),
+  error : debug('swift:error'),
 };
 
 
@@ -29,13 +29,13 @@ const request = async (...args) => {
   }
 };
 
-class OVHStorage {
+class Storage {
 
 
   static async createContainer(ctx, container) {
-    var query = ctx.query('object-store', container, {
+    var query = ctx._query({
       method :   'PUT',
-    });
+    }, container);
 
     var res = await request(query);
     await drain(res);
@@ -43,34 +43,28 @@ class OVHStorage {
   }
 
 
-  static async download(ctx, path, xtra) {
-    var query = ctx.query('object-store', path, xtra);
+  static async download(ctx, container, filename, xtra) {
+    var query = ctx._query(xtra, container, filename);
     var res = await request(query);
     return res;
   }
 
-  static async putFile(ctx, localfile, path, headers) {
-    log.info("putFile %s to %s", localfile, path, headers);
+  static async putFile(ctx, localfile, container, filename, headers) {
+    log.info("putFile %s to %s", localfile, container, filename, headers);
     var stream = fs.createReadStream(localfile);
-    return OVHStorage.putStream(ctx, stream, path, headers);
+    return Storage.putStream(ctx, stream, container, filename, headers);
   }
 
 
   //mostly sync, but we might need to lookup the container key
-  static async tempURL(ctx, container, file_path, method, duration) {
-
-    if(!ctx.containerCache[container])
-      ctx.containerCache[container] = await OVHStorage.showContainer(ctx, container);
+  static async tempURL(ctx, container, filename, method, duration) {
 
     if(!duration)
       duration = 86400;
 
-    let secret = ctx.containerCache[container]['x-container-meta-temp-url-key'];
+    let secret = await ctx._secret(Storage, container);
 
-    if(!secret)
-      throw `Invalid container '${container}' configuration (missing secret key)`;
-
-    let dst = ctx.query('object-store', path.join(container, file_path));
+    let dst = ctx._query({}, container, filename);
     let expires = Math.floor(Date.now() / 1000 + duration);
 
     let hmac_body = [method || 'GET', expires, decodeURIComponent(dst.path)].join("\n");
@@ -82,32 +76,32 @@ class OVHStorage {
   }
 
 
-  static async putStream(ctx, stream, path, headers) {
+  static async putStream(ctx, stream, container, filename, headers) {
     if(typeof headers == "string")
       headers = { etag : headers };
 
-    log.info("putStream to", path, headers);
-    var query = ctx.query('object-store', path, {
+    log.info("putStream to", filename, headers);
+    var query = ctx._query({
       method :   'PUT',
       headers,
-    });
+    }, container, filename);
     var res = await request(query, stream);
     await drain(res);
     return res.headers;
   }
 
 
-  static async deleteFile(ctx, path) {
-    var query = ctx.query('object-store', path, {
+  static async deleteFile(ctx, container, filename) {
+    var query = ctx._query({
       method :   'DELETE',
-    });
+    }, container, filename);
     var res = await request(query);
     await drain(res);
     return res.headers;
   }
 
   static async updateContainer(ctx, container, headers) {
-    var query = ctx.query('object-store',  container, {method : 'POST', headers});
+    var query = ctx._query({method : 'POST', headers}, container);
 
     var res = await request(query);
     await drain(res); //make sure to close
@@ -115,17 +109,17 @@ class OVHStorage {
   }
 
   static async toggleMode(ctx, container, mode) {
-    return OVHStorage.updateContainer(ctx, container, {'X-Container-Read' : mode});
+    return Storage.updateContainer(ctx, container, {'X-Container-Read' : mode});
   }
 
 
   static async tempKey(ctx, container, key) {
-    return OVHStorage.updateContainer(ctx, container, {'X-Container-Meta-Temp-URL-Key' : key});
+    return Storage.updateContainer(ctx, container, {'X-Container-Meta-Temp-URL-Key' : key});
   }
 
 
   static async getFileList(ctx, container) {
-    var query = ctx.query('object-store',  container);
+    var query = ctx._query({}, container);
     var res  = await request(query);
     var body = JSON.parse(await drain(res));
     return body;
@@ -134,9 +128,9 @@ class OVHStorage {
 
 
   static async showContainer(ctx, container) {
-    var query = ctx.query('object-store',  container, {
+    var query = ctx._query({
       method :   'HEAD',
-    });
+    }, container);
 
     var res = await request(query);
     await drain(res); //make sure to close
@@ -145,4 +139,4 @@ class OVHStorage {
 
 }
 
-module.exports = OVHStorage;
+module.exports = Storage;
