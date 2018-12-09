@@ -63,15 +63,29 @@ describe("Full stack test suite", function() {
 
 
 
-  var body = "ping";
+  var body = "ping", hash, name = "pi ng";
+  var content_type = 'application/octet-stream';
+
   it("Should upload a dummy file", async () => {
-    var hash = md5(body);
+    hash = md5(body);
     var tmp = bl(body);
     var headers = {etag : hash};
 
-    var res = await Storage.putStream(ctx, tmp, container, "pi ng", headers);
+    var res = await Storage.putStream(ctx, tmp, container, name, headers);
     expect(res.etag).to.eql(hash);
   });
+
+
+  it("Should list container", async () => {
+    var res = await Storage.getFileList(ctx, container);
+    expect(res.length).to.be(1);
+    res = res[0];
+    //var time = (new Date(res.last_modified));
+    //expect((new Date()) - time).to.be.lessThan(1000);
+    var challenge =   {hash, bytes : body.length, name, content_type, last_modified : res.last_modified};
+    expect(res).to.eql(challenge);
+  });
+
 
 
 

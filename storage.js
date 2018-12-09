@@ -9,6 +9,7 @@ const prequest  = promisify(require('nyks/http/request'));
 const drain     = require('nyks/stream/drain');
 const hmac = require('nyks/crypto/hmac');
 const encode = require('querystring').encode;
+const decode = require('querystring').decode;
 const debug  = require('debug');
 
 
@@ -66,12 +67,12 @@ class Storage {
 
     let dst = ctx._endpoint(container, filename);
     let expires = Math.floor(Date.now() / 1000 + duration);
-
-    let hmac_body = [method || 'GET', expires, decodeURIComponent(dst.path)].join("\n");
+    //pathname does not contains querystring
+    let hmac_body = [method || 'GET', expires, decodeURIComponent(dst.pathname)].join("\n");
 
     var sig = hmac('sha1', secret, hmac_body);
 
-    dst.search = encode({temp_url_sig : sig, temp_url_expires : expires});
+    dst.search = encode({...decode(dst.query), temp_url_sig : sig, temp_url_expires : expires});
     return url.format(dst);
   }
 
@@ -118,8 +119,8 @@ class Storage {
   }
 
 
-  static async getFileList(ctx, container) {
-    var query = await ctx._query({}, container);
+  static async getFileList(ctx, container, prefix = "") {
+    var query = await ctx._query({}, container, "?" + encode({prefix}));
     var res  = await request(query);
     var body = JSON.parse(await drain(res));
     return body;
