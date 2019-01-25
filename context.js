@@ -1,11 +1,14 @@
 "use strict";
 
 const url    = require('url');
+const fs     = require('fs');
+const path   = require('path');
+const ini    = require('ini');
+
 
 const get       = require('mout/object/get');
 const rtrim     = require('mout/string/rtrim');
 const reindex   = require('nyks/collection/reindex');
-
 const promisify = require('nyks/function/promisify');
 const request   = promisify(require('nyks/http/request'));
 const drain     = require('nyks/stream/drain');
@@ -147,6 +150,32 @@ class Context  {
     };
 
     return {_query : query, _secret : secret, _endpoint : endpoint};
+  }
+
+
+  //parse an existing rclone configuration file
+  static read_rclone() {
+    var config = {};
+
+    var local_config = path.join(process.env.HOME, '.config/rclone/rclone.conf');
+    if(!fs.existsSync(local_config))
+      return config;
+    local_config = fs.readFileSync(local_config, 'utf8');
+    local_config = ini.parse(local_config);
+
+    for(let key in local_config) {
+      let block = local_config[key];
+      if(block.type != 'swift')
+        continue;
+      config[key] = {
+        "username" : block.user,
+        "password" : block.key,
+        "tenantId" : block.tenant_id,
+        "region"   : block.region,
+      };
+    }
+
+    return config;
   }
 
 }
