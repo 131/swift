@@ -154,7 +154,7 @@ class Context  {
 
 
   //parse an existing rclone configuration file
-  static read_rclone() {
+  static read_rclone(section) {
     var config = {};
 
     var local_config = path.join(process.env.HOME, '.config/rclone/rclone.conf');
@@ -175,7 +175,7 @@ class Context  {
       };
     }
 
-    return config;
+    return section ? config[section] : config;
   }
 
 }
