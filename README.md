@@ -75,7 +75,7 @@ On a CAS designed container, this should be considered as a best practice agains
 
 const fs      = require('fs');
 const Context = require('swift/context');
-const storage = require('swift/services/object-store');
+const storage = require('swift/storage');
 
 const pipe    = require('nyks/stream/pipe');
 const creds   = {
