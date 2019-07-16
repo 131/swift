@@ -75,12 +75,11 @@ describe("Full stack test suite", function() {
 
   it("Should list container", async () => {
     var res = await Storage.getFileList(ctx, container);
-    expect(res.length).to.be(1);
-    res = res[0];
+    let previous = res.find((what) => what.name == name);
     //var time = (new Date(res.last_modified));
     //expect((new Date()) - time).to.be.lessThan(1000);
-    var challenge =   {hash, bytes : body.length, name, content_type, last_modified : res.last_modified};
-    expect(res).to.eql(challenge);
+    var challenge =   {hash, bytes : body.length, name, content_type, last_modified : previous.last_modified};
+    expect(previous).to.eql(challenge);
   });
 
 
