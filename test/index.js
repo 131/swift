@@ -60,9 +60,6 @@ describe("Full stack test suite", function() {
   });
 
 
-
-
-
   var body = "ping", hash, name = "pi ng";
   var content_type = 'application/octet-stream';
 

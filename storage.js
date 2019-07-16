@@ -50,6 +50,19 @@ class Storage {
     return res;
   }
 
+
+  static async head(ctx, container, filename) {
+    return this.download(ctx, container, filename, {
+      method :   'HEAD'
+    });
+  }
+
+  static async update(ctx, container, filename, xtra) {
+    var query = await ctx._query({method : 'POST', ...xtra}, container, filename);
+    var res = await request(query);
+    return res;
+  }
+
   static async putFile(ctx, localfile, container, filename, headers) {
     log.info("putFile %s to %s", localfile, container, filename, headers);
     var stream = fs.createReadStream(localfile);
