@@ -45,13 +45,13 @@ class Storage {
 
 
   static async download(ctx, container, filename, xtra) {
-    var query = await ctx._query(xtra, container, encodeURIComponent(filename));
+    var query = await ctx._query(xtra, container, filename);
     var res = await request(query);
     return res;
   }
 
   static async put(ctx, container, filename, xtra) {
-    var query = await ctx._query({method : 'PUT', ...xtra}, container, encodeURIComponent(filename));
+    var query = await ctx._query({method : 'PUT', ...xtra}, container, filename);
     var res = await request(query);
     return res;
   }
@@ -64,7 +64,7 @@ class Storage {
   }
 
   static async update(ctx, container, filename, xtra) {
-    var query = await ctx._query({method : 'POST', ...xtra}, container, encodeURIComponent(filename));
+    var query = await ctx._query({method : 'POST', ...xtra}, container, filename);
     var res = await request(query);
     return res;
   }
@@ -104,7 +104,7 @@ class Storage {
     var query = await ctx._query({
       method :   'PUT',
       headers,
-    }, container, encodeURIComponent(filename));
+    }, container, filename);
     var res = await request(query, stream);
     await drain(res);
     return res.headers;
@@ -114,7 +114,7 @@ class Storage {
   static async deleteFile(ctx, container, filename) {
     var query = await ctx._query({
       method :   'DELETE',
-    }, container, encodeURIComponent(filename));
+    }, container, filename);
     var res = await request(query);
     await drain(res);
     return res.headers;
