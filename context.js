@@ -113,13 +113,13 @@ class Context  {
 
     var what = 'object-store';
 
-    var endpoint = (container, filename) => {
+    var endpoint = (container, path) => {
       if(!endpoints[what])
         throw `Cannot lookup endpoint for service '${what}'`;
 
       var dst = endpoints[what] + "/" + container;
-      if(filename)
-        dst += "/" + filename;
+      if(path)
+        dst += "/" + path;
       return url.parse(dst);
     };
 
@@ -128,8 +128,8 @@ class Context  {
       "Accept" : "application/json"
     };
 
-    query = (xtra, container, filename) => {
-      var target = {...endpoint(container, filename), ...xtra};
+    query = (xtra, container, path) => {
+      var target = {...endpoint(container, path), ...xtra};
       target.headers  = {...headers, ...target.headers};
       log.debug("Query", target);
       return target;
