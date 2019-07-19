@@ -1,6 +1,6 @@
 {
   "name": "swift",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Openstack swift APIs",
   "homepage": "http://github.com/131/swift",
   "author": "Francois Leurent <131.js@cloudyks.org>",
