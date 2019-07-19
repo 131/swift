@@ -157,7 +157,7 @@ class Context  {
   static read_rclone(section) {
     var config = {};
 
-    var local_config = path.join(process.env.HOME, '.config/rclone/rclone.conf');
+    var local_config = path.join(process.env.HOME || process.env.USERPROFILE, '.config/rclone/rclone.conf');
     if(!fs.existsSync(local_config))
       return config;
     local_config = fs.readFileSync(local_config, 'utf8');
