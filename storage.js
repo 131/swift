@@ -43,6 +43,14 @@ class Storage {
     return res.headers;
   }
 
+  static async listContainers(ctx) {
+    var query = await ctx._query();
+    var res = await request(query);
+    let containers = JSON.parse(String(await drain(res)));
+    for(let container of containers)
+      container.headers = await Storage.showContainer(ctx, container.name);
+    return containers.reduce((acc, val) => (acc[val.name] = val, acc), {});
+  }
 
   static async download(ctx, container, filename, xtra) {
     var query = await ctx._query(xtra, container, filename);
@@ -77,12 +85,12 @@ class Storage {
 
 
   //mostly sync, but we might need to lookup the container key
-  static async tempURL(ctx, container, filename, method, duration) {
+  static tempURL(ctx, container, filename, method, duration) {
 
     if(!duration)
       duration = 86400;
 
-    let secret = await ctx._secret(container);
+    let secret = ctx._secret(container);
 
     let dst = ctx._endpoint(container, filename);
     let expires = Math.floor(Date.now() / 1000 + duration);
@@ -134,7 +142,9 @@ class Storage {
 
 
   static async tempKey(ctx, container, key) {
-    return Storage.updateContainer(ctx, container, {'X-Container-Meta-Temp-URL-Key' : key});
+    let res = await Storage.updateContainer(ctx, container, {'X-Container-Meta-Temp-URL-Key' : key});
+    ctx._containerCache = await Storage.listContainers(ctx); //update container cache
+    return res;
   }
 
 

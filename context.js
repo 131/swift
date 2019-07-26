@@ -1,6 +1,7 @@
 "use strict";
 
 const url    = require('url');
+const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
 const ini    = require('ini');
@@ -30,8 +31,9 @@ class Context  {
     var config = {
       ...credentials
     };
+    let agent = new https.Agent({ keepAlive : true });
 
-    let secret = async function(container) {
+    let secret = function(container) {
       let bundled = get(config, `containers.${container}.temp-url-key`);
       if(bundled)
         return bundled;
@@ -56,7 +58,7 @@ class Context  {
 
     let query = async function(xtra, container, filename) {
       let tmpurl = await Storage.tempURL(this, container, filename, xtra && xtra.method);
-      var target = {...url.parse(tmpurl), ...xtra};
+      var target = {agent, ...url.parse(tmpurl), ...xtra};
       target.headers  = {...headers, ...target.headers};
 
       log.debug("Query", target);
@@ -69,9 +71,10 @@ class Context  {
 
   static async build(credentials) {
 
+    let agent = new https.Agent({ keepAlive : true });
+
     if(credentials.containers)
       return Context.build_containers(credentials);
-
 
     var config = {
       authURL :  'https://auth.cloud.ovh.net/v2.0',
@@ -117,7 +120,9 @@ class Context  {
       if(!endpoints[what])
         throw `Cannot lookup endpoint for service '${what}'`;
 
-      var dst = endpoints[what] + "/" + container;
+      var dst = endpoints[what];
+      if(container)
+        dst += "/" + container;
       if(path)
         dst += "/" + path;
       return url.parse(dst);
@@ -129,27 +134,28 @@ class Context  {
     };
 
     query = (xtra, container, path) => {
-      var target = {...endpoint(container, path), ...xtra};
+      var target = {agent, ...endpoint(container, path), ...xtra};
       target.headers  = {...headers, ...target.headers};
       log.debug("Query", target);
       return target;
     };
 
-    let containerCache = {};
 
-    let secret = async function(container) {
-      if(!containerCache[container])
-        containerCache[container] = await Storage.showContainer(this, container);
+    let secret = function(container) {
+      if(!this._containerCache[container])
+        throw `Invalid container '${container}' configuration (missing secret key)`;
 
-      let secret = containerCache[container]['x-container-meta-temp-url-key'];
-
+      let secret = get(this._containerCache, `${container}.headers.x-container-meta-temp-url-key`);
 
       if(!secret)
         throw `Invalid container '${container}' configuration (missing secret key)`;
       return secret;
     };
 
-    return {_query : query, _secret : secret, _endpoint : endpoint};
+    let ctx = {_query : query, _secret : secret, _endpoint : endpoint};
+
+    ctx._containerCache = await Storage.listContainers(ctx);
+    return ctx;
   }
 
 
