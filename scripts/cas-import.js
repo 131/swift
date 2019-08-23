@@ -49,6 +49,7 @@ class foo {
     let dst_list = await Storage.getFileList(dst_ctx, dst_container);
     dst_list = dst_list.map(entry => path.basename(entry.name));
     console.log("remote %s has %d blocks", dst_container, dst_list.length);
+
     let src_list = [];
     for(let container of src_container) {
       let tmp = await Storage.getFileList(src_ctx, container);

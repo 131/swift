@@ -149,9 +149,17 @@ class Storage {
 
 
   static async getFileList(ctx, container, prefix = "") {
-    var query = await ctx._query({}, container, "?" + encode({prefix}));
-    var res  = await request(query);
-    var body = JSON.parse(await drain(res));
+    var body = [], items = 1, marker;
+
+    while(body.length < items) {
+      if(body.length)
+        marker = body[body.length - 1].name;
+      let query = await ctx._query({}, container, "?" + encode({prefix, marker}));
+      let res  = await request(query);
+      items = Number(res.headers['x-container-object-count']);
+      let page = JSON.parse(await drain(res));
+      body.push(...page);
+    }
     return body;
   }
 
