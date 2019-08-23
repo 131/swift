@@ -15,7 +15,7 @@
   "main": "./index.js",
   "scripts": {
     "preversion": "npm run checkall",
-    "eslint": "eslint index.js context.js storage.js storage/",
+    "eslint": "eslint .",
     "checkall": "npm run eslint",
     "mocha": "node node_modules/mocha/bin/_mocha -b",
     "test": "npm run eslint && npm run cover",

@@ -1,7 +1,6 @@
 "use strict";
 
 const expect = require('expect.js');
-const path = require('path');
 const md5       = require('nyks/crypto/md5');
 
 const drain = require('nyks/stream/drain');
@@ -17,18 +16,18 @@ const container = "trashme_tests_ci";
 const secret = guid();
 
 var creds;
-if(process.env['OS_USERNAME'])
+if(process.env['OS_USERNAME']) {
   creds = {
-    "username": process.env['OS_USERNAME'],
-    "password": process.env['OS_PASSWORD'],
-    "tenantId": process.env['OS_TENANT_ID'],
-    "region"  : process.env['OS_REGION_NAME'],
-
+    "username" : process.env['OS_USERNAME'],
+    "password" : process.env['OS_PASSWORD'],
+    "tenantId" : process.env['OS_TENANT_ID'],
+    "region"   : process.env['OS_REGION_NAME'],
     //for direct container test
     "endpoint"  : process.env['CONTAINER_ENDPOINT']
   };
-else
+} else {
   creds = require('./credentials.json');
+}
 
 
 var container_creds = {
@@ -85,7 +84,7 @@ describe("Full stack test suite", function() {
 
 
 
-  it("should generate a tempurl for this file", async() => {
+  it("should generate a tempurl for this file", async () => {
     var tempurl = await Storage.tempURL(ctx, container, "pi ng");
     expect(tempurl).to.be.ok();
 
@@ -105,10 +104,9 @@ describe("Full stack test suite", function() {
 
 
   it("Should crash on corrupted file", async () => {
-    var hash = md5(body);
     var tmp = bl(body);
     try {
-      var res = await Storage.putStream(ctx, tmp, container, "pi ng", 'nope');
+      await Storage.putStream(ctx, tmp, container, "pi ng", 'nope');
       expect().to.fail("Never here");
     } catch(err) {
       expect(err.res.statusCode).to.be(422); //Unprocessable Entity
@@ -140,7 +138,7 @@ describe("TempURL stack (container based) test suite", function() {
   });
 
 
-  it("should generate a tempurl for this file", async() => {
+  it("should generate a tempurl for this file", async () => {
     var tempurl = await Storage.tempURL(ctx, container, "pi ng");
     expect(tempurl).to.be.ok();
 
@@ -150,7 +148,7 @@ describe("TempURL stack (container based) test suite", function() {
     expect(challenge).to.eql(body);
   });
 
-  it("should download this file", async() => {
+  it("should download this file", async () => {
     var res = await Storage.download(ctx, container, "pi ng");
     expect(res).to.be.ok();
 
@@ -169,7 +167,7 @@ describe("TempURL stack (container based) test suite", function() {
   it("Should crash on container operation", async () => {
 
     try {
-      var res = await Storage.showContainer(ctx, container);
+      await Storage.showContainer(ctx, container);
       expect().to.fail("Never here");
     } catch(err) {
       expect(err).to.match(/Cannot work on non filename in container mode/);
