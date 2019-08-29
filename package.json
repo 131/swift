@@ -1,6 +1,6 @@
 {
   "name": "swift",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "description": "Openstack swift APIs",
   "homepage": "http://github.com/131/swift",
   "author": "Francois Leurent <131.js@cloudyks.org>",
@@ -19,7 +19,7 @@
     "checkall": "npm run eslint",
     "mocha": "node node_modules/mocha/bin/_mocha -b",
     "test": "npm run eslint && npm run cover",
-    "cover" : "nyc --temp-directory coverage/.nyc_output --reporter text-summary --reporter html --reporter lcov  mocha",
+    "cover": "nyc --temp-directory coverage/.nyc_output --reporter text-summary --reporter html --reporter lcov  mocha",
     "coveralls": "npm install coveralls && node ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info"
   },
   "repository": {
