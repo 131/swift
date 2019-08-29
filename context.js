@@ -7,9 +7,9 @@ const path   = require('path');
 const ini    = require('ini');
 
 
-const get       = require('mout/object/get');
 const rtrim     = require('mout/string/rtrim');
 const reindex   = require('nyks/collection/reindex');
+const dive      = require('nyks/object/dive');
 const promisify = require('nyks/function/promisify');
 const request   = promisify(require('nyks/http/request'));
 const drain     = require('nyks/stream/drain');
@@ -34,7 +34,7 @@ class Context  {
     let agent = new https.Agent({ keepAlive : true });
 
     let secret = function(container) {
-      let bundled = get(config, `containers.${container}.temp-url-key`);
+      let bundled = dive(config, 'containers', container, 'temp-url-key');
       if(bundled)
         return bundled;
 
@@ -47,7 +47,7 @@ class Context  {
     };
 
     var endpoint = (container, filename) => {
-      let dst = get(config, `containers.${container}.endpoint`);
+      let dst = dive(config, 'containers', container, 'endpoint');
       if(!dst)
         throw `Cannot lookup endpoint for container '${container}'`;
       if(!filename)
@@ -106,9 +106,9 @@ class Context  {
     }
 
 
-    var token           = get(payload, 'access.token');
-    var endpoints = get(payload, 'access.serviceCatalog').reduce((full, catalog) => { //, k
-      var publicUrl = get(reindex(catalog.endpoints, 'region'), `${config.region}.publicURL`);
+    var token           = dive(payload, 'access.token');
+    var endpoints = dive(payload, 'access.serviceCatalog').reduce((full, catalog) => { //, k
+      var publicUrl = dive(reindex(catalog.endpoints, 'region'), `${config.region}.publicURL`);
       if(publicUrl)
         full[catalog.type]  = rtrim(publicUrl, '/');
       return full;
@@ -145,7 +145,7 @@ class Context  {
       if(!this._containerCache[container])
         throw `Invalid container '${container}' configuration (missing secret key)`;
 
-      let secret = get(this._containerCache, `${container}.headers.x-container-meta-temp-url-key`);
+      let secret = dive(this._containerCache, container, 'headers.x-container-meta-temp-url-key');
 
       if(!secret)
         throw `Invalid container '${container}' configuration (missing secret key)`;
