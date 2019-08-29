@@ -56,8 +56,8 @@ class Context  {
     };
 
 
-    let query = async function(xtra, container, filename) {
-      let tmpurl = await Storage.tempURL(this, container, filename, xtra && xtra.method);
+    let query = function(xtra, container, filename) {
+      let tmpurl = Storage.tempURL(this, container, filename, xtra && xtra.method);
       var target = {agent, ...url.parse(tmpurl), ...xtra};
       target.headers  = {...headers, ...target.headers};
 

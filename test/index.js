@@ -85,7 +85,7 @@ describe("Full stack test suite", function() {
 
 
   it("should generate a tempurl for this file", async () => {
-    var tempurl = await Storage.tempURL(ctx, container, "pi ng");
+    var tempurl = Storage.tempURL(ctx, container, "pi ng");
     expect(tempurl).to.be.ok();
 
     //now fetch temp url (!)
@@ -139,7 +139,7 @@ describe("TempURL stack (container based) test suite", function() {
 
 
   it("should generate a tempurl for this file", async () => {
-    var tempurl = await Storage.tempURL(ctx, container, "pi ng");
+    var tempurl = Storage.tempURL(ctx, container, "pi ng");
     expect(tempurl).to.be.ok();
 
     //now fetch temp url (!)

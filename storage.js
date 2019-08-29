@@ -34,7 +34,7 @@ class Storage {
 
 
   static async createContainer(ctx, container) {
-    var query = await ctx._query({
+    var query = ctx._query({
       method :   'PUT',
     }, container);
 
@@ -44,7 +44,7 @@ class Storage {
   }
 
   static async listContainers(ctx) {
-    var query = await ctx._query();
+    var query = ctx._query();
     var res = await request(query);
     let containers = JSON.parse(String(await drain(res)));
     for(let container of containers)
@@ -53,13 +53,13 @@ class Storage {
   }
 
   static async download(ctx, container, filename, xtra) {
-    var query = await ctx._query(xtra, container, filename);
+    var query = ctx._query(xtra, container, filename);
     var res = await request(query);
     return res;
   }
 
   static async put(ctx, container, filename, xtra) {
-    var query = await ctx._query({method : 'PUT', ...xtra}, container, filename);
+    var query = ctx._query({method : 'PUT', ...xtra}, container, filename);
     var res = await request(query);
     return res;
   }
@@ -72,7 +72,7 @@ class Storage {
   }
 
   static async update(ctx, container, filename, xtra) {
-    var query = await ctx._query({method : 'POST', ...xtra}, container, filename);
+    var query = ctx._query({method : 'POST', ...xtra}, container, filename);
     var res = await request(query);
     return res;
   }
@@ -109,7 +109,7 @@ class Storage {
       headers = { etag : headers };
 
     log.info("putStream to", filename, headers);
-    var query = await ctx._query({
+    var query = ctx._query({
       method :   'PUT',
       headers,
     }, container, filename);
@@ -120,7 +120,7 @@ class Storage {
 
 
   static async deleteFile(ctx, container, filename) {
-    var query = await ctx._query({
+    var query = ctx._query({
       method :   'DELETE',
     }, container, filename);
     var res = await request(query);
@@ -129,7 +129,7 @@ class Storage {
   }
 
   static async updateContainer(ctx, container, headers) {
-    var query = await ctx._query({method : 'POST', headers}, container);
+    var query = ctx._query({method : 'POST', headers}, container);
 
     var res = await request(query);
     await drain(res); //make sure to close
@@ -154,7 +154,7 @@ class Storage {
     while(body.length < items) {
       if(body.length)
         marker = body[body.length - 1].name;
-      let query = await ctx._query({}, container, "?" + encode({prefix, marker}));
+      let query = ctx._query({}, container, "?" + encode({prefix, marker}));
       let res  = await request(query);
       items = Number(res.headers['x-container-object-count']);
       let page = JSON.parse(await drain(res));
@@ -166,9 +166,7 @@ class Storage {
 
 
   static async showContainer(ctx, container) {
-    var query = await ctx._query({
-      method :   'HEAD',
-    }, container);
+    var query = ctx._query({method :   'HEAD'}, container);
 
     var res = await request(query);
     await drain(res); //make sure to close
