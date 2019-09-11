@@ -120,7 +120,7 @@ describe("Full stack test suite", function() {
 describe("TempURL stack (container based) test suite", function() {
   this.timeout(10 * 1000);
 
-  var ctx;
+  var ctx, hash;
   before("should check for proper credentials", async () => {
     ctx = await Context.build(container_creds);
     console.log("Context is ready");
@@ -129,7 +129,7 @@ describe("TempURL stack (container based) test suite", function() {
 
   var body = "ping";
   it("Should upload a dummy file", async () => {
-    var hash = md5(body);
+    hash = md5(body);
     var tmp = bl(body);
     var headers = {etag : hash};
 
@@ -156,12 +156,24 @@ describe("TempURL stack (container based) test suite", function() {
     expect(challenge).to.eql(body);
   });
 
+  it("Should fail on a missing file", async () => {
+    var res = await Storage.check(ctx, container, "nope");
+    expect(res).to.be(false);
+  });
+
+  it("Should check an existing file", async () => {
+    var res = await Storage.check(ctx, container, "pi ng");
+    expect(res).to.be.ok();
+    expect(res.headers.etag).to.eql(hash);
+  });
 
 
   it("Should delete a dummy file", async () => {
     var res = await Storage.deleteFile(ctx, container, "pi ng");
     expect(res).to.be.ok();
   });
+
+
 
 
   it("Should crash on container operation", async () => {

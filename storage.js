@@ -71,6 +71,20 @@ class Storage {
     });
   }
 
+  //like head but return false on 404
+  static async check(ctx, container, filename) {
+    try {
+      let res = await this.download(ctx, container, filename, {
+        method :   'HEAD'
+      });
+      return res;
+    } catch(err) {
+      if(err.res && err.res.statusCode == 404)
+        return false;
+      throw err;
+    }
+  }
+
   static async update(ctx, container, filename, xtra) {
     var query = ctx._query({method : 'POST', ...xtra}, container, filename);
     var res = await request(query);
@@ -154,7 +168,8 @@ class Storage {
     while(body.length < items) {
       if(body.length)
         marker = body[body.length - 1].name;
-      let query = ctx._query({}, container, "?" + encode({prefix, marker}));
+      let query = ctx._query({}, container, "?" + encode({prefix, marker, 'format' : 'json'}));
+
       let res  = await request(query);
       items = Number(res.headers['x-container-object-count']);
       let page = JSON.parse(await drain(res));

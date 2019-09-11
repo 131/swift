@@ -11,8 +11,19 @@ class foo {
     var creds = Context.read_rclone("thecube");
     var ctx = await Context.build(creds);
 
-    //    var temp = await Storage.getFileList(ctx, "Movies");
-    //    return temp;
+    let res = await Storage.put(ctx, "thecube", "foo.sqlite", {
+      headers : {
+      'x-symlink-target' : 'thecube/index.sqlite',
+      },
+    });
+
+console.log(res);
+
+    var temp = await Storage.getFileList(ctx, "thecube");
+    console.log(temp);
+
+process.exit();
+
 
     let tmp = await Storage.head(ctx, "Movies", "rep-avengersinfinitywar.2018.720p.bluray.x264.sr");
     console.log(tmp);
