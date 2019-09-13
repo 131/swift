@@ -174,7 +174,11 @@ class Storage {
       items = Number(res.headers['x-container-object-count']);
       let page = JSON.parse(await drain(res));
       body.push(...page);
+
+      if(prefix)
+        break;
     }
+
     return body;
   }
 
