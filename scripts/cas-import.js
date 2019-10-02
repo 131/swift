@@ -12,7 +12,7 @@ const md5     = require('nyks/crypto/md5');
 
 const bl = require('bl');
 
-const sleep = require('nyks/async/sleep');
+const retryUntil  = require('nyks/async/retryUntil');
 const SContext = require('swift/context');
 const Storage = require('swift/storage');
 const ProgressBar = require('progress');
@@ -107,21 +107,11 @@ class foo {
         if(err.res.statusCode != 504)
           throw err;
 
-        let tries = 6 * 10;
-        do {
-          console.log("WAITING A BIT FOR %s to appear", md5_hash);
-          try {
-            await Storage.head(dst_ctx, dst_container, dst_name);
-            break;
-          } catch(err) {
-            if(err.res.statusCode != 404)
-              throw err;
-            await sleep(10 * 1000);
-          }
-        } while(tries-- > 0);
+        console.log("WAITING A BIT FOR %s to appear", md5_hash, dst_name);
 
-        if(tries <= 0)
-          throw ` Cannot fetch ${md5_hash}`;
+        await retryUntil(() => {
+          return Storage.check(dst_ctx, dst_container, dst_name);
+        }, 60 * 10000, 10 * 1000, `Cannot fetch ${md5_hash}`);
       }
 
       headers = {'content-type' :  MIME_FILE};

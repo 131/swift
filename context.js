@@ -92,27 +92,38 @@ class Context  {
       }
     };
 
-    var query = {
-      ...url.parse(config.authURL + '/tokens'),
-      headers :  { 'Accept' : 'application/json' },
-      json : true,
+    var endpoints;
+    var headers;
+
+    let renew = async () => {
+      let query = {
+        ...url.parse(config.authURL + '/tokens'),
+        headers :  { 'Accept' : 'application/json' },
+        json : true,
+      };
+
+      try {
+        var res = await request(query, json);
+        var payload = JSON.parse(await drain(res));
+      } catch(err) {
+        throw `Invalid swift credentials`;
+      }
+
+      let token = dive(payload, 'access.token');
+      endpoints = dive(payload, 'access.serviceCatalog').reduce((full, catalog) => { //, k
+        var publicUrl = dive(reindex(catalog.endpoints, 'region'), `${config.region}.publicURL`);
+        if(publicUrl)
+          full[catalog.type]  = rtrim(publicUrl, '/');
+        return full;
+      }, {});
+
+      headers = {
+        "X-Auth-Token" : token.id,
+        "Accept" : "application/json"
+      };
     };
 
-    try {
-      var res = await request(query, json);
-      var payload = JSON.parse(await drain(res));
-    } catch(err) {
-      throw `Invalid swift credentials`;
-    }
-
-
-    var token           = dive(payload, 'access.token');
-    var endpoints = dive(payload, 'access.serviceCatalog').reduce((full, catalog) => { //, k
-      var publicUrl = dive(reindex(catalog.endpoints, 'region'), `${config.region}.publicURL`);
-      if(publicUrl)
-        full[catalog.type]  = rtrim(publicUrl, '/');
-      return full;
-    }, {});
+    await renew(); //init stuffs
 
     var what = 'object-store';
 
@@ -128,12 +139,8 @@ class Context  {
       return url.parse(dst);
     };
 
-    var headers  = {
-      "X-Auth-Token" : token.id,
-      "Accept" : "application/json"
-    };
 
-    query = (xtra, container, path) => {
+    let query = (xtra, container, path) => {
       var target = {agent, ...endpoint(container, path), ...xtra};
       target.headers  = {...headers, ...target.headers};
       log.debug("Query", target);
@@ -152,7 +159,7 @@ class Context  {
       return secret;
     };
 
-    let ctx = {_query : query, _secret : secret, _endpoint : endpoint};
+    let ctx = {_query : query, _secret : secret, _endpoint : endpoint, renew};
 
     ctx._containerCache = await Storage.listContainers(ctx);
     return ctx;

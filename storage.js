@@ -71,6 +71,7 @@ class Storage {
     });
   }
 
+
   //like head but return false on 404
   static async check(ctx, container, filename) {
     try {
@@ -84,6 +85,7 @@ class Storage {
       throw err;
     }
   }
+
 
   static async update(ctx, container, filename, xtra) {
     var query = ctx._query({method : 'POST', ...xtra}, container, filename);
@@ -116,7 +118,6 @@ class Storage {
     dst.search = encode({...decode(dst.query), temp_url_sig : sig, temp_url_expires : expires});
     return url.format(dst);
   }
-
 
   static async putStream(ctx, stream, container, filename, headers) {
     if(typeof headers == "string")
@@ -160,7 +161,6 @@ class Storage {
     ctx._containerCache = await Storage.listContainers(ctx); //update container cache
     return res;
   }
-
 
   static async getFileList(ctx, container, prefix = "") {
     var body = [], items = 1, marker;
