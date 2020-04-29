@@ -1,6 +1,8 @@
 "use strict";
 
 const expect = require('expect.js');
+const dotenv = require('dotenv');
+
 const md5       = require('nyks/crypto/md5');
 
 const drain = require('nyks/stream/drain');
@@ -14,6 +16,8 @@ const guid       = require('mout/random/guid');
 
 const container = "trashme_tests_ci";
 const secret = guid();
+
+dotenv.config();
 
 var creds;
 if(process.env['OS_USERNAME']) {
@@ -82,6 +86,17 @@ describe("Full stack test suite", function() {
   });
 
 
+  it("Should walkthrough container", async () => {
+    var res = [];
+    const container_details = await Storage.showContainer(ctx, container);
+    for await(let value of Storage.walkthrough(ctx, container))
+      res.push(value);
+
+    expect(res.length).to.eql(container_details['x-container-object-count']);
+    let previous = res.find((what) => what.name == name);
+    var challenge =   {hash, bytes : body.length, name, content_type, last_modified : previous.last_modified};
+    expect(previous).to.eql(challenge);
+  });
 
 
   it("should generate a tempurl for this file", async () => {
