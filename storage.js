@@ -184,18 +184,17 @@ class Storage {
 
   static async *walkthrough(ctx, container, prefix = "") {
     const limit = 1000;
-    var responseLength = limit;
     var marker;
-    while(responseLength === limit) {
+    do {
       let query = ctx._query({}, container, "?" + encode({prefix, marker, 'format' : 'json', limit}));
       let res  = await request(query);
       let pages = JSON.parse(await drain(res));
       for(const page in pages)
         yield pages[page];
-      responseLength = pages.length;
-      if(pages.length)
-        marker = pages[pages.length - 1].name;
-    }
+      if(!pages.length)
+        break;
+      marker = pages[pages.length - 1].name;
+    } while(true);
   }
 
 
