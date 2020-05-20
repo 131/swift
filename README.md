@@ -19,6 +19,22 @@ $ npm install swift
 Auth3 API will login to your openstack and use a X-Auth-Token in all operations.
 Make sure to renew (setInterval) the auth token periodicaly.
 
+## credentials
+```js
+"use strict";
+
+module.exports = {
+    authUrl : "https://auth.cloud.ovh.net/v3", // default "https://auth.cloud.ovh.net/v2.0"
+    keystoneV3 : true, // default false
+    username : "OpenstackUsername", // required
+    password : "OpenstackPassword", // required
+    tenantId : "OpenstackProjectId", // one of tenantId or tenantName is required
+    tenantName : "OpenstackProjectName", // one of tenantId or tenantName is required
+    region: "WAW", // default "GRA3"
+};
+
+```
+
 
 ## object-store 
 ```js
@@ -67,7 +83,6 @@ module.exports = foo;
 # API/services (meta-temp-url-key)
 Using a container meta-temp key, you can upload, retrieve or delete specific files in your container.
 On a CAS designed container, this should be considered as a best practice against a full container access.
-
 
 ## object-store 
 ```js

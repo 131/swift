@@ -77,18 +77,44 @@ class Context  {
       return Context.build_containers(credentials);
 
     var config = {
-      authURL :  'https://auth.cloud.ovh.net/v2.0',
+      authURL :  credentials.keystoneV3 ? 'https://auth.cloud.ovh.net/v3' : 'https://auth.cloud.ovh.net/v2.0',
+      keystoneV3 : false,
       region :   'GRA3',
       ...credentials
     };
 
-    var json = {
+    var json = config.keystoneV3 ? {
+      auth : {
+        identity : {
+          methods : ['password'],
+          password : {
+            user : {
+              domain : {
+                id : 'default'
+              },
+              name : config.username,
+              password : config.password
+            }
+          }
+        },
+        scope : {
+          project : {
+            domain : {
+              id : 'default'
+            },
+            name : config.tenantName,
+            id : config.tenantId
+          }
+        }
+      }
+    } : {
       auth : {
         passwordCredentials : {
           username : config.username,
           password : config.password
         },
-        tenantId : config.tenantId
+        tenantId : config.tenantId,
+        tenantName : config.tenantName
       }
     };
 
@@ -97,7 +123,7 @@ class Context  {
 
     let renew = async () => {
       let query = {
-        ...url.parse(config.authURL + '/tokens'),
+        ...url.parse(config.authURL + (config.keystoneV3 ? '/auth/tokens' : '/tokens')),
         headers :  { 'Accept' : 'application/json' },
         json : true,
       };
@@ -109,16 +135,16 @@ class Context  {
         throw `Invalid swift credentials`;
       }
 
-      let token = dive(payload, 'access.token');
-      endpoints = dive(payload, 'access.serviceCatalog').reduce((full, catalog) => { //, k
-        var publicUrl = dive(reindex(catalog.endpoints, 'region'), `${config.region}.publicURL`);
+      let token = config.keystoneV3 ? res.headers['x-subject-token'] : dive(payload, 'access.token.id');
+      endpoints = dive(payload, config.keystoneV3 ? 'token.catalog' : 'access.serviceCatalog').reduce((full, catalog) => { //, k
+        var publicUrl = dive(reindex(catalog.endpoints, 'region'), config.keystoneV3 ? `${config.region}.url` : `${config.region}.publicURL`);
         if(publicUrl)
           full[catalog.type]  = rtrim(publicUrl, '/');
         return full;
       }, {});
 
       headers = {
-        "X-Auth-Token" : token.id,
+        "X-Auth-Token" : token,
         "Accept" : "application/json"
       };
     };
