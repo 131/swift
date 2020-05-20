@@ -116,7 +116,7 @@ class Context  {
         tenantId : config.tenantId,
         tenantName : config.tenantName
       }
-  };
+    };
 
     var endpoints;
     var headers;
