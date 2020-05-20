@@ -84,26 +84,26 @@ class Context  {
     };
 
     var json = config.keystoneV3 ? {
-      auth: {
-        identity: {
-          methods: ['password'],
-          password: {
-            user: {
-              domain: {
-                id: 'default'
+      auth : {
+        identity : {
+          methods : ['password'],
+          password : {
+            user : {
+              domain : {
+                id : 'default'
               },
-              name: config.username,
-              password: config.password
+              name : config.username,
+              password : config.password
             }
           }
         },
-        scope: {
-          project: {
-            domain: {
-              id: 'default'
+        scope : {
+          project : {
+            domain : {
+              id : 'default'
             },
-            name: config.tenantName,
-            id: config.tenantId
+            name : config.tenantName,
+            id : config.tenantId
           }
         }
       }
@@ -116,7 +116,7 @@ class Context  {
         tenantId : config.tenantId,
         tenantName : config.tenantName
       }
-	};
+  };
 
     var endpoints;
     var headers;
