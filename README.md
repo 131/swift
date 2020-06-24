@@ -24,8 +24,7 @@ Make sure to renew (setInterval) the auth token periodicaly.
 "use strict";
 
 module.exports = {
-    authUrl : "https://auth.cloud.ovh.net/v3", // default "https://auth.cloud.ovh.net/v2.0"
-    keystoneV3 : true, // default false
+    authUrl : "https://auth.cloud.ovh.net/v3", // default
     username : "OpenstackUsername", // required
     password : "OpenstackPassword", // required
     tenantId : "OpenstackProjectId", // one of tenantId or tenantName is required
