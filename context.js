@@ -113,7 +113,6 @@ class Context  {
         ...url.parse(config.authURL + '/auth/tokens'),
         headers :  { 'Accept' : 'application/json' },
         json : true,
-        expect : 200,
       };
 
       var res = await request(query, json);
