@@ -10,8 +10,7 @@ const ini    = require('ini');
 const rtrim     = require('mout/string/rtrim');
 const reindex   = require('nyks/collection/reindex');
 const dive      = require('nyks/object/dive');
-const promisify = require('nyks/function/promisify');
-const request   = promisify(require('nyks/http/request'));
+const request   = require('nyks/http/request');
 const drain     = require('nyks/stream/drain');
 
 const debug  = require('debug');
@@ -78,7 +77,7 @@ class Context  {
 
     var config = {
       authURL :  'https://auth.cloud.ovh.net/v3',
-      region :   'GRA3',
+      region :   'GRA',
       ...credentials
     };
 
@@ -114,14 +113,15 @@ class Context  {
         ...url.parse(config.authURL + '/auth/tokens'),
         headers :  { 'Accept' : 'application/json' },
         json : true,
+        expect : 200,
       };
 
-      try {
-        var res = await request(query, json);
-        var payload = JSON.parse(await drain(res));
-      } catch(err) {
+      var res = await request(query, json);
+      if(!(res.statusCode >= 200 && res.statusCode < 300))
         throw `Invalid swift credentials`;
-      }
+
+
+      var payload = JSON.parse(await drain(res));
 
       let token = res.headers['x-subject-token'];
       endpoints = dive(payload, 'token.catalog').reduce((full, catalog) => { //, k
@@ -172,6 +172,7 @@ class Context  {
         throw `Invalid container '${container}' configuration (missing secret key)`;
       return secret;
     };
+
 
     let ctx = {_query : query, _secret : secret, _endpoint : endpoint, renew};
 

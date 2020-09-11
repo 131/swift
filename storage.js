@@ -4,10 +4,10 @@ const fs   = require('fs');
 const url  = require('url');
 
 
-const promisify = require('nyks/function/promisify');
-const prequest  = promisify(require('nyks/http/request'));
+const hrequest  = require('nyks/http/request');
 const drain     = require('nyks/stream/drain');
-const hmac = require('nyks/crypto/hmac');
+
+const hmac   = require('nyks/crypto/hmac');
 const encode = require('querystring').encode;
 const decode = require('querystring').decode;
 const debug  = require('debug');
@@ -21,13 +21,12 @@ const log = {
 
 
 const request = async (...args) => {
-  try {
-    return await prequest(...args);
-  } catch(err) {
-    if(err.res)
-      err.res = {message : String(await drain(err.res)), headers : err.res.headers, statusCode : err.res.statusCode};
+  var res = await hrequest(...args);
+  if(!(res.statusCode >= 200 && res.statusCode < 300)) {
+    let err = {message : String(await drain(res)), headers : res.headers, statusCode : res.statusCode};
     throw err;
   }
+  return res;
 };
 
 class Storage {
@@ -80,7 +79,7 @@ class Storage {
       });
       return res;
     } catch(err) {
-      if(err.res && err.res.statusCode == 404)
+      if(err.statusCode == 404)
         return false;
       throw err;
     }
