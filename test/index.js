@@ -109,7 +109,7 @@ describe("Full stack test suite", function() {
       await Storage.putStream(ctx, tmp, container, "pi ng", 'nope');
       expect().to.fail("Never here");
     } catch(err) {
-      expect(err.res.statusCode).to.be(422); //Unprocessable Entity
+      expect(err.statusCode).to.be(422); //Unprocessable Entity
     }
   });
 
