@@ -1,0 +1,23 @@
+name: tests
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '8.x'
+    - run: npm install
+    - run: npm test
+      env:
+        DEBUG: swift:*,-*debug
+        OS_USERNAME:  ${{ secrets.OS_USERNAME }}
+        OS_PASSWORD:  ${{ secrets.OS_PASSWORD }}
+        OS_TENANT_ID:  ${{ secrets.OS_TENANT_ID }}
+        OS_REGION_NAME:  ${{ secrets.OS_REGION_NAME }}
+        CONTAINER_ENDPOINT:  ${{ secrets.CONTAINER_ENDPOINT }}
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}

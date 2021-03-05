@@ -1,9 +1,10 @@
 Openstack *swift* client API with ES7 async/await design.
 
-
+[![Build Status](https://github.com/131/swift/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/131/swift/actions/workflows/test.yml)
 [![NPM Version](https://img.shields.io/npm/v/swift.svg?style=flat)](https://www.npmjs.org/package/swift)
-[![Build Status](https://img.shields.io/travis/131/swift.svg?style=flat)](http://travis-ci.org/131/swift)
 [![Coverage Status](https://img.shields.io/coveralls/131/swift.svg?style=flat)](https://coveralls.io/r/131/swift?branch=master)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+[![Code style](https://img.shields.io/badge/code%2fstyle-ivs-green.svg)](https://www.npmjs.com/package/eslint-plugin-ivs)
 
 
 
@@ -140,6 +141,8 @@ module.exports = foo;
 
 
 
+# Credits
+* [131](https://github.com/131)
 
 
 
