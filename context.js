@@ -123,6 +123,7 @@ class Context  {
       var payload = JSON.parse(await drain(res));
 
       let token = res.headers['x-subject-token'];
+
       endpoints = dive(payload, 'token.catalog').reduce((full, catalog) => { //, k
         var publicUrl = dive(reindex(catalog.endpoints, 'region'), `${config.region}.url`);
         if(publicUrl)
@@ -162,10 +163,8 @@ class Context  {
 
 
     let secret = function(container) {
-      if(!this._containerCache[container])
-        throw `Invalid container '${container}' configuration (missing secret key)`;
-
-      let secret = dive(this._containerCache, container, 'headers.x-container-meta-temp-url-key');
+      // always prefer account token over container specific, if available
+      let secret = dive(this._auth, 'x-account-meta-temp-url-key') || dive(this._containerCache, container, 'headers.x-container-meta-temp-url-key');
 
       if(!secret)
         throw `Invalid container '${container}' configuration (missing secret key)`;
@@ -173,9 +172,25 @@ class Context  {
     };
 
 
-    let ctx = {_query : query, _secret : secret, _endpoint : endpoint, renew};
+    let auth = await request(query());
+    if(auth.statusCode !== 200)
+      throw `Cannot lookup auth infos`;
 
-    ctx._containerCache = await Storage.listContainers(ctx);
+    let containers = JSON.parse(String(await drain(auth)));
+
+    let ctx = {
+      _query : query,
+      _secret : secret,
+      _endpoint : endpoint,
+      _auth : auth.headers,
+      renew,
+    };
+
+    for(let container of containers)
+      container.headers = await Storage.showContainer(ctx, container.name);
+
+    ctx._containerCache = containers.reduce((acc, val) => (acc[val.name] = val, acc), {});
+
     return ctx;
   }
 
